@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: تحميل الكود
         uses: actions/checkout@v4
@@ -17,16 +17,17 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: تثبيت أدوات النظام
+      - name: تثبيت أدوات النظام الحيوية
         run: |
+          sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y git zip unzip openjdk-17-jdk autoconf libtool pkg-config zlib1g-dev libncurses-dev cmake libffi-dev libssl-dev build-essential
-          sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6 /lib/x86_64-linux-gnu/libtinfo.so.5
+          sudo apt-get install -y build-extras ccache libstdc++6:i386 libgcc1:i386 zlib1g:i386 libncurses5:i386 libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libffi-dev libssl-dev cmake autoconf libtool pkg-config zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 git curl unzip lzip make
 
-      - name: تثبيت Buildozer
+      - name: تثبيت Cython و Buildozer
         run: |
           python -m pip install --upgrade pip
-          pip install buildozer cython==0.29.36
+          pip install --upgrade setuptools
+          pip install cython==0.29.36 buildozer
 
       - name: تحميل الخط العربي تلقائياً
         run: |
@@ -34,18 +35,9 @@ jobs:
           wget -q -O data/NotoNaskhArabic-Regular.ttf "https://raw.githubusercontent.com/notofonts/notofonts.github.io/main/fonts/NotoNaskhArabic/hinted/ttf/NotoNaskhArabic-Regular.ttf" \
             || wget -q -O data/NotoNaskhArabic-Regular.ttf "https://raw.githubusercontent.com/jenskutilek/free-fonts/master/Noto/Noto%20Naskh%20Arabic/TTF/NotoNaskhArabic-Regular.ttf"
 
-      - name: تخزين مؤقت لتسريع البناء القادم
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.buildozer
-            ~/.android
-          key: buildozer-${{ hashFiles('buildozer.spec') }}
-
       - name: بناء الـ APK
         run: |
-          yes | buildozer -v android debug || true
-          yes | buildozer -v android debug
+          buildozer -v android debug
 
       - name: رفع الـ APK كملف قابل للتحميل
         uses: actions/upload-artifact@v4
